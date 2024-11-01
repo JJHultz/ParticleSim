@@ -9,6 +9,8 @@ time_step = 0.05  # Time step for the simulation
 gravity = -0.1  # Gravity strength (applies downward force)
 sim_speed = 0.01 # Pause between each simulation frame
 damping_force = 0.7 # dampens each collision
+collision_adjust = 1.001 # This variable changes how much the position of a particle is adjusted post colision to lessen the chance of two collision frames in a row
+attractive_force = 0.1 # Particle attraction force
 
 
 # Simulation boundaries
@@ -81,8 +83,31 @@ for _ in range(1000):  # Number of steps
     
     # Update each particle's velocity first
     for particle in particles:
-        # particle.apply_gravity()
-        particle.update_position()
+        # We'll have to run another for loop to check the positions of every other particle
+        for particle_two in particles:
+            if particle != particle_two:
+                dx = particle_two.x - particle.x
+                dy = particle_two.y - particle.y
+                dz = particle_two.z - particle.z
+                dist = (dx ** 2 + dy ** 2 + dz ** 2) ** 0.5
+                radii = particle.radius + particle_two.radius
+
+                if dist < radii:
+                    if abs(dx) < abs(dy) and abs(dx) < abs(dz):
+                        particle.update_velocity(-particle.vx * damping_force, particle.vy * damping_force, particle.vz * damping_force)
+                        particle.x = particle.x * collision_adjust
+                    
+                    elif abs(dy) < abs(dx) and abs(dy) < abs(dz):
+                        particle.update_velocity(particle.vx * damping_force, -particle.vy * damping_force, particle.vz * damping_force)
+                        particle.x = particle.y * collision_adjust
+                    
+                    elif abs(dz) < abs(dx) and abs(dz) < abs(dy):
+                        particle.update_velocity(particle.vx * damping_force, particle.vy * damping_force, -particle.vz * damping_force)
+                        particle.x = particle.z * collision_adjust
+
+                else:
+                    particle.add_velocity(dx/(dist ** 2), dy/(dist ** 2), dz/(dist ** 2))
+
         
 
     # Update each particle
