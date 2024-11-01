@@ -8,6 +8,7 @@ num_particles = 10  # Number of particles in the simulation
 time_step = 0.05  # Time step for the simulation
 gravity = -0.1  # Gravity strength (applies downward force)
 sim_speed = 0.01 # Pause between each simulation frame
+damping_force = 0.7 # dampens each collision
 
 
 # Simulation boundaries
@@ -42,11 +43,11 @@ class Particle:
         
         # Check for boundary collisions and reflect velocity if needed
         if self.x <= boundary_x[0] or self.x >= boundary_x[1]:
-            self.vx = -self.vx  # Reverse x-velocity on x-boundary collision
+            self.vx = -self.vx * damping_force  # Reverse x-velocity on x-boundary collision
         if self.y <= boundary_y[0] or self.y >= boundary_y[1]:
-            self.vy = -self.vy  # Reverse y-velocity on y-boundary collision
+            self.vy = -self.vy * damping_force  # Reverse y-velocity on y-boundary collision
         if self.z <= boundary_z[0] or self.z >= boundary_z[1]:
-            self.vz = -self.vz  # Reverse z-velocity on z-boundary collision
+            self.vz = -self.vz * damping_force  # Reverse z-velocity on z-boundary collision
 
     def update_velocity(self, vX, vY, vZ):
         # This method will set the particle's new velocity
@@ -78,11 +79,17 @@ for _ in range(1000):  # Number of steps
     ax.set_ylim(boundary_y)
     ax.set_zlim(boundary_z)
     
-    # Update each particle
+    # Update each particle's velocity first
     for particle in particles:
         # particle.apply_gravity()
         particle.update_position()
         
+
+    # Update each particle
+    for particle in particles:
+        # particle.apply_gravity()
+        particle.update_position()
+
         # Draw the particle
         ax.scatter(particle.x, particle.y, particle.z, color='b')  # Blue particles
     
