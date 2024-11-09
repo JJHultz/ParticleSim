@@ -5,16 +5,17 @@ import random
 import matplotlib.colors as mcolors
 
 # Parameters for the simulation
-num_particles = 10  # Number of particles in the simulation
+num_particles = 3  # Number of particles in the simulation
 time_step = 0.05  # Time step for the simulation
-gravity = 1  # Gravity strength (applies force towards gravity location)
+gravity = 0  # Gravity strength (applies force towards gravity location)
 gx = 0
 gy = 0
 gz = 5
 sim_speed = 0.01 # Pause between each simulation frame
 damping_force = 0.95 # dampens each collision
+drag = 1 # 'air resistance'
 collision_adjust = 0.1 # This variable changes how much the position of a particle is adjusted post colision to lessen the chance of two collision frames in a row
-attractive_force = 0.1 # Particle attraction force
+attractive_force = 0.3 # Particle attraction force
 
 
 # Simulation boundaries
@@ -36,8 +37,11 @@ class Particle:
         self.vz = random.uniform(-1, 1)
         
         # Initialize the particle property(s)
-        self.radius = 1
-        self.color = random.choice(list(mcolors.CSS4_COLORS.values()))
+        self.radius = 0.2
+        # self.color = random.choice(list(mcolors.CSS4_COLORS.values()))
+        self.color = '#0000FF'
+        # print(self.color)
+        self.static = False
 
     def apply_gravity(self):
         self.vx -= (self.x - gx) * gravity
@@ -81,6 +85,11 @@ class Particle:
         self.vx += vX
         self.vy += vY
         self.vz += vZ
+        
+    def apply_drag(self):
+        self.vx = self.vx * drag
+        self.vy = self.vy * drag
+        self.vz = self.vz * drag
 
 # Initialize particles
 particles = [Particle() for _ in range(num_particles)]
@@ -93,6 +102,40 @@ ax.set_xlim(boundary_x)
 ax.set_ylim(boundary_y)
 ax.set_zlim(boundary_z)
 
+# Playing around with static particles --------------------------------------------------------------------------------------------------------------------------
+if False:
+    particles[0].static = True
+    particles[0].x = 0
+    particles[0].y = 0
+    particles[0].z = 5
+    particles[0].vx = 1
+    particles[0].vy = 1
+    particles[0].vz = 1
+    particles[0].radius = 2
+    particles[0].color = '#FF1111'
+
+# Orbit test ----------------------------------------------------------------------------------------------------------------------------------------------------
+if False:
+    particles[0].static = True
+    particles[0].x = 0
+    particles[0].y = 0
+    particles[0].z = 5
+    particles[0].vx = 2
+    particles[0].vy = 2
+    particles[0].vz = 2
+    particles[0].radius = 8
+    particles[0].color = '#FF1111'
+
+    # particles[1].static = True
+    particles[1].x = 0
+    particles[1].y = 5
+    particles[1].z = 5
+    particles[1].vx = 0.0001
+    particles[1].vy = 0.0001
+    particles[1].vz = 3
+    particles[1].radius = 0.1
+    particles[1].color = '#1111FF'
+
 # Simulation loop
 for _ in range(1000):  # Number of steps
     ax.cla()  # Clear the plot for the next frame
@@ -104,7 +147,7 @@ for _ in range(1000):  # Number of steps
     for particle in particles:
         # We'll have to run another for loop to check the positions of every other particle
         for particle_two in particles:
-            if particle != particle_two:
+            if not particle.static and particle != particle_two:
                 dx = particle_two.x - particle.x
                 dy = particle_two.y - particle.y
                 dz = particle_two.z - particle.z
@@ -130,7 +173,9 @@ for _ in range(1000):  # Number of steps
 
     # Update each particle
     for particle in particles:
-        particle.apply_gravity()
+        if not particle.static:
+            particle.apply_drag()
+            particle.apply_gravity()
         particle.update_position()
 
         # Draw the particle
